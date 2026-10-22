@@ -1,0 +1,177 @@
+@import url("https://fonts.googleapis.com/css2?family=Impact&family=Oswald:wght@700&display=swap");
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #020720;
+  font-family: "Oswald", sans-serif;
+  user-select: none;
+}
+
+/* --- INTRO SCREEN STYLING --- */
+.intro-screen {
+  height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle, #0e287e 0%, #030a2f 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.intro-oval {
+  background: radial-gradient(circle, #1a42b8 0%, #091e66 100%);
+  border: 12px solid #233b8a;
+  border-radius: 50% / 40%;
+  padding: 60px 100px;
+  box-shadow:
+    0 0 50px rgba(0, 0, 0, 0.8),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-text {
+  font-family: "Impact", sans-serif;
+  font-size: 6rem;
+  line-height: 0.9;
+  text-align: center;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ffe066 0%, #ff8c00 50%, #d45100 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(4px 4px 0px #310d00)
+    drop-shadow(0px 0px 15px rgba(255, 140, 0, 0.8));
+}
+
+/* --- AUTHENTIC STAGE ARCH BOARD STYLING --- */
+.board-container {
+  height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle, #081a4a 0%, #01030d 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* The Big Outer Gold/Yellow Stage Arch */
+.stage-arch {
+  background: linear-gradient(180deg, #ffe100 0%, #cc8800 50%, #885500 100%);
+  padding: 22px;
+  border-radius: 260px 260px 25px 25px;
+  box-shadow:
+    0 0 60px rgba(255, 204, 0, 0.4),
+    inset 0 0 20px rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Inner Studio Backing */
+.stage-inner {
+  background: radial-gradient(circle, #0c2563 0%, #030c24 100%);
+  border: 6px solid #ffe680;
+  border-radius: 240px 240px 15px 15px;
+  padding: 35px 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+}
+
+/* Top Active Score / Points Box (Like the "22" in your image) */
+.top-score-box {
+  background: linear-gradient(180deg, #2b70ff 0%, #0c338a 100%);
+  border: 5px solid #ffffff;
+  border-radius: 10px;
+  padding: 8px 60px;
+  font-family: "Impact", sans-serif;
+  font-size: 4.5rem;
+  color: #ffffff;
+  text-shadow:
+    0 0 15px #00d2ff,
+    2px 2px 0px #000;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.7),
+    inset 0 0 15px rgba(0, 0, 0, 0.5);
+  margin-bottom: 30px;
+  min-width: 120px;
+  text-align: center;
+}
+
+/* 2-Column Answer Grid Layout */
+.answers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  width: 740px;
+  background: #02071a;
+  padding: 18px;
+  border: 5px solid #ffcc00;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+/* Individual Answer Flip Cards */
+.answer-card {
+  height: 62px;
+  background: linear-gradient(180deg, #1d5ed8 0%, #08286b 100%);
+  border: 3px solid #82baff;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 12px rgba(255, 255, 255, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  color: white;
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+/* Number Circle When Unrevealed (e.g., 1, 2, 3...) */
+.card-num {
+  margin: 0 auto;
+  background: radial-gradient(circle, #3375ff 0%, #0c3180 100%);
+  border: 2px solid #a6d0ff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
+  font-size: 1.5rem;
+}
+
+/* Revealed Answer Points Box on the Right Side of the Card */
+.card-pts {
+  background: linear-gradient(180deg, #3375ff 0%, #0c3180 100%);
+  border-left: 3px solid #82baff;
+  padding: 0 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-family: "Impact", sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+}
+
+/* Strikes Overlay */
+.strikes-overlay {
+  position: absolute;
+  bottom: 30px;
+  font-size: 6rem;
+  color: #ff2200;
+  text-shadow:
+    0 0 25px #000,
+    0 0 10px #ff0000;
+  font-family: "Impact", sans-serif;
+}
