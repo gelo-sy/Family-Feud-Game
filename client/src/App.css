@@ -108,9 +108,12 @@ body {
 /* 2-Column Answer Grid Layout */
 .answers-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  width: 740px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(4, 52px);
+  grid-auto-flow: column;
+  gap: 10px;
+  box-sizing: border-box;
+  width: min(740px, calc(100vw - 100px));
   background: #02071a;
   padding: 18px;
   border: 5px solid #ffcc00;
@@ -120,48 +123,32 @@ body {
 
 /* Individual Answer Flip Cards */
 .answer-card {
-  height: 62px;
+  min-width: 0;
+  min-height: 52px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 18px;
+  border: 2px solid #82baff;
+  border-radius: 7px;
   background: linear-gradient(180deg, #1d5ed8 0%, #08286b 100%);
-  border: 3px solid #82baff;
-  border-radius: 6px;
   box-shadow:
     inset 0 0 12px rgba(255, 255, 255, 0.4),
     0 4px 8px rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 18px;
-  color: white;
-  font-size: 1.6rem;
+  color: #fff;
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(1rem, 2vw, 1.5rem);
   font-weight: bold;
+  overflow-wrap: anywhere;
 }
 
-/* Number Circle When Unrevealed (e.g., 1, 2, 3...) */
-.card-num {
+.answer-card-text {
+  flex: 1;
+}
+
+.answer-card-number {
   margin: 0 auto;
-  background: radial-gradient(circle, #3375ff 0%, #0c3180 100%);
-  border: 2px solid #a6d0ff;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
-  font-size: 1.5rem;
-}
-
-/* Revealed Answer Points Box on the Right Side of the Card */
-.card-pts {
-  background: linear-gradient(180deg, #3375ff 0%, #0c3180 100%);
-  border-left: 3px solid #82baff;
-  padding: 0 16px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  font-family: "Impact", sans-serif;
-  font-size: 1.8rem;
-  letter-spacing: 1px;
 }
 
 /* Strikes Overlay */
@@ -174,4 +161,352 @@ body {
     0 0 25px #000,
     0 0 10px #ff0000;
   font-family: "Impact", sans-serif;
+}
+
+.host-question-form {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #1c1c1c;
+}
+
+.host-question-form h3 {
+  margin: 0 0 14px;
+}
+
+.host-field {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.host-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background: #292929;
+  color: #fff;
+  font: inherit;
+}
+
+.host-answer-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.host-answer-row {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.host-points-field {
+  flex: 0 0 90px;
+}
+
+.host-remove-answer,
+.host-add-answer,
+.host-submit-question {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.host-remove-answer {
+  background: #6c757d;
+}
+
+.host-question-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.host-add-answer {
+  background: #444;
+}
+
+.host-submit-question {
+  flex: 1;
+  background: #28a745;
+}
+
+.host-question-error {
+  margin: 10px 0 0;
+  color: #ff7b7b;
+}
+
+.host-fast-money {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #1c1c1c;
+}
+
+.host-fast-money h3,
+.host-fast-money p {
+  margin: 0 0 10px;
+}
+
+.host-fast-money-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.host-fast-money-actions button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.host-fast-money-start {
+  background: #28a745;
+}
+
+.host-fast-money-stop {
+  background: #dc3545;
+}
+
+.host-fast-money-answers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.host-fast-money-participant {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.host-fast-money-participant h4 {
+  margin: 0;
+}
+
+.host-fast-money-answer-row {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+
+.host-fast-money-points {
+  flex: 0 0 78px;
+}
+
+.fast-money-board {
+  gap: 18px;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.fast-money-title {
+  margin: 0;
+  color: #ffe066;
+  font-family: "Impact", sans-serif;
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  text-align: center;
+  text-shadow: 3px 4px 0 #310d00;
+}
+
+.fast-money-countdown {
+  color: #fff;
+  font-family: "Impact", sans-serif;
+  font-size: clamp(4rem, 10vw, 7rem);
+  line-height: 1;
+  text-shadow: 0 0 20px #00d2ff;
+}
+
+.fast-money-countdown.is-urgent {
+  color: #ff5757;
+  text-shadow: 0 0 20px #ff0000;
+}
+
+.fast-money-total-score {
+  margin: 0;
+}
+
+.fast-money-answer-list {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.fast-money-participants {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  width: min(1200px, 94vw);
+}
+
+.fast-money-participant {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.fast-money-participant h2 {
+  margin: 0;
+  color: #fff;
+  font-family: "Oswald", sans-serif;
+  text-align: center;
+}
+
+.fast-money-answer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 52px;
+  padding: 0 18px;
+  border: 2px solid #82baff;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #1d5ed8 0%, #08286b 100%);
+  color: #fff;
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.7rem);
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.fast-money-answer-number {
+  display: flex;
+  flex: 0 0 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #a6d0ff;
+  border-radius: 50%;
+}
+
+.fast-money-answer-text {
+  flex: 1;
+}
+
+.fast-money-answer-points {
+  min-width: 42px;
+  padding: 4px 8px;
+  border-left: 2px solid #82baff;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .host-fast-money-answers,
+  .fast-money-participants {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+.host-question-sequence {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #1c1c1c;
+}
+
+.host-question-sequence h3,
+.host-question-sequence p {
+  margin: 0 0 10px;
+}
+
+.host-sequence-navigation {
+  display: flex;
+  gap: 10px;
+}
+
+.host-sequence-navigation button,
+.host-sequence-list button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 5px;
+  background: #007bff;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.host-sequence-navigation button:disabled,
+.host-sequence-list button:disabled {
+  background: #444;
+  color: #bbb;
+  cursor: default;
+}
+
+.host-sequence-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 28px;
+}
+
+.host-sequence-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  background: #292929;
+}
+
+.host-sequence-list li.is-current {
+  outline: 1px solid #28a745;
+}
+
+.host-sequence-list li span {
+  overflow-wrap: anywhere;
+}
+
+.host-sequence-item-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.host-sequence-list .host-delete-question {
+  background: #dc3545;
+}
+
+.board-question {
+  position: absolute;
+  top: 5%;
+  width: min(90%, 1000px);
+  color: #fff;
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2.75rem);
+  text-align: center;
+  text-shadow: 2px 3px 5px #000;
+}
+
+@media (max-width: 480px) {
+  .host-answer-row {
+    flex-wrap: wrap;
+  }
+
+  .host-answer-row > .host-field:first-child {
+    flex-basis: 100%;
+  }
+
+  .host-points-field {
+    flex: 1;
+  }
 }
