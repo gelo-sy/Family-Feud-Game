@@ -1,33 +1,139 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
+import correctAnswerSound from "./family-feud sfx/correct answer.mp3";
+import wrongAnswerSound from "./family-feud sfx/wrong answer.mp3";
+import fastMoneyMusic from "./family-feud sfx/Fastmoney Music.mp3";
+import mainGameMusic from "./family-feud sfx/Main Game.mp3";
+import themeMusic from "./family-feud sfx/Thememusic.mp3";
+import jortizLogo from "./assets/jortiz-logo.png";
 import "./App.css";
 
 const SOCKET_SERVER_URL = "http://localhost:3001";
 const socket = io(SOCKET_SERVER_URL);
+const answerSounds = {
+  correct: correctAnswerSound,
+  wrong: wrongAnswerSound,
+};
+
+function getBackgroundTrack(state) {
+  if (state?.screenState === "intro") return themeMusic;
+  if (state?.screenState === "board") return mainGameMusic;
+  if (state?.screenState === "fast-money") return fastMoneyMusic;
+  return null;
+}
 
 export default function App() {
   const [gameState, setGameState] = useState(null);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const musicRef = useRef(null);
+  const gameStateRef = useRef(gameState);
   const [questionDraft, setQuestionDraft] = useState({
     question: "",
     answers: [{ text: "", points: "" }],
   });
   const [questionError, setQuestionError] = useState("");
+  const [activeFastMoneyAnswer, setActiveFastMoneyAnswer] = useState(null);
 
   const queryParams = new URLSearchParams(window.location.search);
   const view = queryParams.get("view") || "board";
 
   useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
+  useEffect(() => {
+    document.title = view === "host" || view === "server" ? "Server" : "Player";
+  }, [view]);
+
+  useEffect(() => {
+    if (view === "host") return;
+
+    const music = new Audio();
+    music.loop = true;
+    music.volume = 0.35;
+    musicRef.current = music;
+
+    const unlockAudio = () => {
+      setAudioUnlocked(true);
+      const state = gameStateRef.current;
+      const track = state?.playerAudioEnabled
+        ? getBackgroundTrack(state)
+        : null;
+      if (!track) return;
+
+      if (music.dataset.track !== track) {
+        music.src = track;
+        music.dataset.track = track;
+      }
+
+      music.play().catch((error) => {
+        console.warn("Unable to play game music:", error);
+      });
+    };
+    window.addEventListener("pointerdown", unlockAudio);
+    window.addEventListener("keydown", unlockAudio);
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+      music.pause();
+      musicRef.current = null;
+    };
+  }, [view]);
+
+  useEffect(() => {
+    if (view === "host") return;
+
+    const music = musicRef.current;
+    if (!music) return;
+    if (!gameState?.playerAudioEnabled) {
+      music.pause();
+      return;
+    }
+    if (!audioUnlocked) return;
+
+    const track = getBackgroundTrack(gameState);
+
+    if (!track) {
+      music.pause();
+      music.dataset.track = "";
+      return;
+    }
+
+    if (music.dataset.track !== track) {
+      music.pause();
+      music.currentTime = 0;
+      music.src = track;
+      music.dataset.track = track;
+    }
+
+    if (music.paused) {
+      music.play().catch((error) => {
+        console.warn("Unable to play game music:", error);
+      });
+    }
+  }, [audioUnlocked, gameState, view]);
+
+  useEffect(() => {
     socket.on("update-game", (state) => setGameState(state));
     socket.on("question-error", (message) => setQuestionError(message));
     socket.on("play-sound", (sound) => {
-      new Audio(`/audio/${sound}.mp3`).play().catch(() => {});
+      if (view === "host" || !audioUnlocked || !gameState?.playerAudioEnabled)
+        return;
+
+      const source = answerSounds[sound];
+      if (!source) return;
+
+      new Audio(source).play().catch((error) => {
+        console.warn(`Unable to play ${sound} answer sound:`, error);
+      });
     });
     return () => {
       socket.off("update-game");
       socket.off("question-error");
       socket.off("play-sound");
     };
-  }, []);
+  }, [audioUnlocked, gameState?.playerAudioEnabled, view]);
 
   if (!gameState)
     return (
@@ -48,8 +154,8 @@ export default function App() {
     };
 
     const addAnswer = () => {
-      if (questionDraft.answers.length >= 8) {
-        setQuestionError("A question can have up to 8 answers.");
+      if (questionDraft.answers.length >= 10) {
+        setQuestionError("A question can have up to 10 answers.");
         return;
       }
       setQuestionDraft((draft) => ({
@@ -100,6 +206,25 @@ export default function App() {
         }}
       >
         <h2>📱 Host Control Panel</h2>
+        <button
+          type="button"
+          onClick={() =>
+            socket.emit("set-player-audio", !gameState.playerAudioEnabled)
+          }
+          style={{
+            marginBottom: "20px",
+            padding: "12px 16px",
+            background: gameState.playerAudioEnabled ? "#dc3545" : "#28a745",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            fontWeight: "bold",
+          }}
+        >
+          {gameState.playerAudioEnabled
+            ? "Mute Player Sound"
+            : "Enable Player Sound"}
+        </button>
 
         <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
           <button
@@ -154,22 +279,34 @@ export default function App() {
             <h3>Fast Money Round</h3>
             <p>
               {gameState.fastMoney.active
-                ? `Time remaining: ${gameState.fastMoney.remaining}s`
-                : gameState.fastMoney.remaining === 0
-                  ? "Time is up. Answers remain on the display."
-                  : "Fast Money screen ready. Start a 20-second round."}
+                ? `Participant ${gameState.fastMoney.currentParticipant + 1}: ${gameState.fastMoney.remaining}s remaining`
+                : gameState.fastMoney.awaitingSecondParticipant
+                  ? "Participant 1's time is up. Start Participant 2 when ready."
+                  : gameState.fastMoney.remaining === 0
+                    ? "Time is up. Answers remain on the display."
+                    : "Fast Money screen ready. Start the 20-second and 25-second rounds."}
             </p>
             <div className="host-fast-money-actions">
+              {gameState.fastMoney.awaitingSecondParticipant && (
+                <button
+                  type="button"
+                  className="host-fast-money-start"
+                  onClick={() => socket.emit("start-fast-money-second")}
+                >
+                  Start Participant 2 (25s)
+                </button>
+              )}
               <button
                 type="button"
                 className="host-fast-money-start"
                 onClick={() => socket.emit("start-fast-money")}
               >
-                {gameState.fastMoney.active
-                  ? "Restart 20s Timer"
+                {gameState.fastMoney.active ||
+                gameState.fastMoney.awaitingSecondParticipant
+                  ? "Restart Fast Money Timers"
                   : gameState.fastMoney.remaining === 0
                     ? "Start New Round"
-                    : "Start 20s Round"}
+                    : "Start Fast Money Timers"}
               </button>
               {gameState.fastMoney.visible && (
                 <button
@@ -186,40 +323,125 @@ export default function App() {
                 <div className="host-fast-money-participant" key={participant}>
                   <h4>Participant {participant + 1}</h4>
                   {answers.map((answer, idx) => (
-                    <div className="host-fast-money-answer-row" key={idx}>
-                      <label className="host-field">
-                        Answer {idx + 1}
+                    <div
+                      className="host-fast-money-answer-row host-fast-money-survey-row"
+                      key={idx}
+                    >
+                      <label className="host-field host-fast-money-question">
+                        Question {idx + 1}
                         <input
-                          value={answer.text}
+                          value={answer.question}
                           maxLength={120}
                           onChange={(event) =>
                             socket.emit("update-fast-money-answer", {
                               participant,
                               index: idx,
-                              field: "text",
+                              field: "question",
                               value: event.target.value,
                             })
                           }
-                          placeholder={`Enter answer ${idx + 1}`}
                         />
                       </label>
+                      <div className="host-fast-money-answer-select">
+                        <label className="host-field">
+                          Survey Answer
+                          <input
+                            value={answer.text}
+                            maxLength={120}
+                            onFocus={() =>
+                              setActiveFastMoneyAnswer(`${participant}-${idx}`)
+                            }
+                            onBlur={() => setActiveFastMoneyAnswer(null)}
+                            onChange={(event) =>
+                              socket.emit("update-fast-money-answer", {
+                                participant,
+                                index: idx,
+                                field: "text",
+                                value: event.target.value,
+                              })
+                            }
+                            placeholder="Type or choose an answer"
+                          />
+                        </label>
+                        {activeFastMoneyAnswer === `${participant}-${idx}` && (
+                          <div
+                            className="host-fast-money-answer-options"
+                            role="listbox"
+                          >
+                            {answer.options
+                              .filter((option) =>
+                                option.text
+                                  .toLowerCase()
+                                  .includes(answer.text.toLowerCase()),
+                              )
+                              .map((option) => {
+                                const optionIndex =
+                                  answer.options.indexOf(option);
+                                return (
+                                  <button
+                                    type="button"
+                                    role="option"
+                                    aria-selected={
+                                      answer.selectedOption === optionIndex
+                                    }
+                                    key={option.text}
+                                    onMouseDown={(event) =>
+                                      event.preventDefault()
+                                    }
+                                    onClick={() => {
+                                      socket.emit("select-fast-money-answer", {
+                                        participant,
+                                        index: idx,
+                                        optionIndex,
+                                      });
+                                      setActiveFastMoneyAnswer(null);
+                                    }}
+                                  >
+                                    {option.text} ({option.points} points)
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="host-fast-money-reveal"
+                        onClick={() =>
+                          socket.emit("toggle-fast-money-answer-field", {
+                            participant,
+                            index: idx,
+                            field: "answer",
+                          })
+                        }
+                      >
+                        {answer.answerRevealed
+                          ? "Hide Answer"
+                          : "Reveal Answer"}
+                      </button>
                       <label className="host-field host-fast-money-points">
                         Points
                         <input
                           type="number"
-                          min="0"
-                          step="1"
                           value={answer.points}
-                          onChange={(event) =>
-                            socket.emit("update-fast-money-answer", {
-                              participant,
-                              index: idx,
-                              field: "points",
-                              value: event.target.value,
-                            })
-                          }
+                          readOnly
                         />
                       </label>
+                      <button
+                        type="button"
+                        className="host-fast-money-reveal"
+                        onClick={() =>
+                          socket.emit("toggle-fast-money-answer-field", {
+                            participant,
+                            index: idx,
+                            field: "points",
+                          })
+                        }
+                      >
+                        {answer.pointsRevealed
+                          ? "Hide Points"
+                          : "Reveal Points"}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -386,7 +608,28 @@ export default function App() {
             <h4>Question: {gameState.question || "No question selected"}</h4>
             <hr style={{ borderColor: "#333" }} />
 
-            <h3>Reveal Answers:</h3>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <h3>Reveal Answers:</h3>
+              <button
+                type="button"
+                onClick={() => socket.emit("clear-answers")}
+                style={{
+                  padding: "8px 12px",
+                  background: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                }}
+              >
+                Clear Answers
+              </button>
+            </div>
             {gameState.answers.map((ans, idx) => (
               <button
                 key={idx}
@@ -455,7 +698,10 @@ export default function App() {
   if (gameState.screenState === "fast-money") {
     const fastMoneyTotal = gameState.fastMoney.answers
       .flat()
-      .reduce((total, answer) => total + answer.points, 0);
+      .reduce(
+        (total, answer) => total + (answer.pointsRevealed ? answer.points : 0),
+        0,
+      );
 
     return (
       <div className="board-container fast-money-board">
@@ -473,24 +719,22 @@ export default function App() {
         >
           {fastMoneyTotal}
         </div>
-        <div className="fast-money-participants">
-          {gameState.fastMoney.answers.map((answers, participant) => (
-            <section className="fast-money-participant" key={participant}>
-              <div className="fast-money-answer-list">
-                {answers.map((answer, idx) => (
-                  <div className="fast-money-answer" key={idx}>
-                    <span className="fast-money-answer-number">{idx + 1}</span>
-                    <span className="fast-money-answer-text">
-                      {answer.text}
-                    </span>
-                    <span className="fast-money-answer-points">
-                      {answer.points}
-                    </span>
-                  </div>
-                ))}
+        <div className="answers-grid fast-money-answer-grid">
+          {gameState.fastMoney.answers.flatMap((answers, participant) =>
+            answers.map((answer, idx) => (
+              <div
+                className="answer-card fast-money-survey-card"
+                key={`${participant}-${idx}`}
+              >
+                <span className="answer-card-text">
+                  {answer.answerRevealed ? answer.text : ""}
+                </span>
+                <span className="answer-card-points">
+                  {answer.pointsRevealed ? answer.points : ""}
+                </span>
               </div>
-            </section>
-          ))}
+            )),
+          )}
         </div>
       </div>
     );
@@ -501,20 +745,19 @@ export default function App() {
     return (
       <div className="intro-screen">
         <div className="intro-oval">
+          <img className="intro-logo" src={jortizLogo} alt="Jortiz Dialysis Corporation" />
           <div className="title-text">
-            FAMILY
-            <br />
-            FEUD
+            Family Feud
           </div>
         </div>
       </div>
     );
   }
 
-  // --- BIG BOARD DISPLAY VIEW (Matches your 2nd Image Arch Layout) ---
-  // Keep the board at eight slots, even when a question has fewer answers.
+  // --- BIG BOARD DISPLAY VIEW ---
+  // Keep the board at ten slots, even when a question has fewer answers.
   const displaySlots = [...gameState.answers];
-  while (displaySlots.length < 8) {
+  while (displaySlots.length < 10) {
     displaySlots.push({ text: "", points: "", revealed: false, empty: true });
   }
 
@@ -529,20 +772,12 @@ export default function App() {
           <div className="answers-grid">
             {displaySlots.map((ans, idx) => (
               <div key={idx} className="answer-card">
-                {!ans.empty && (ans.revealed ? (
-                  <>
-                    <span className="answer-card-text">
-                      {ans.text}
-                    </span>
-                    <span className="fast-money-answer-points">
-                      {ans.points}
-                    </span>
-                  </>
-                ) : (
-                  <span className="fast-money-answer-number answer-card-number">
-                    {idx + 1}
-                  </span>
-                ))}
+                <span className="answer-card-text">
+                  {ans.revealed ? ans.text : ""}
+                </span>
+                <span className="answer-card-points">
+                  {ans.revealed ? ans.points : ""}
+                </span>
               </div>
             ))}
           </div>
